@@ -17,7 +17,7 @@ ReactDom.render(
 
 #### 属性
 ```jsx
-  const element = <div tabIndex="0"><//div>
+  const element = <div tabIndex="0"></div>
   // 使用引号来定义以字符串为值的属性
   
   const element = <img src={user.avatarUrl}></img>
