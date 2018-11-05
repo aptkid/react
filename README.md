@@ -136,5 +136,192 @@ function sum(a, b) {
   return a + b;
 }
 ```
-
 ## State & 生命周期
+
+#### 将函数转换为类
+1、继承React.Component的类
+
+2、创建一个render()的空方法
+
+3、将函数体移动到render()方法中
+
+4、在render()方法中，使用this.props替换props
+
+5、删除剩余的空函数声明
+```js
+class Clock extends React.Component {
+  render() {
+    return (
+      <div>
+        <h1>Hello, React</h1>
+        <h2>It is {this.props.date.toLocalTimeString()}.</h2>
+      </div>
+    );
+  }
+}
+```
+`使用类就允许我们使用其他特性，例如局部状态、生命周期钩子`
+
+#### 为一个类添加局部状态
+通过三个步骤将date从属性移动到状态中：
+1、在render()方法中使用`this.state.date`代替`this.props.date`
+```js
+class Clock extends React.Component {
+  render() {
+    return(
+      <div>
+        <h1>Hello, React!</h1>
+        <h2>It is {this.state.date.toLocalTimeString()}</h2>
+      </div>
+    );
+  }
+}
+```
+2、添加一个类构造函数来初始化状态`this.state`
+```js
+class Olock extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {date: new Date()};
+  }
+
+  render() {
+    return (
+      <div>
+        <h1>Hello, React</h1>
+        <h2>It is {this.state.date.toLocalTimeString()}</h2>
+      </div>
+    );
+  }
+}
+```
+```类组件应该始终使用props调用基础构造函数```
+
+3、从<Clock />元素移除date属性：
+```js
+ReactDOM.render(<Clock />, document.getElementById("root"));
+```
+
+结果如下：
+```js
+class Olock extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {date: new Date()};
+  }
+
+  render() {
+    return (
+      <div>
+        <h1>Hello, React</h1>
+        <h2>It is {this.state.date.toLocalTimeString()}</h2>
+      </div>
+    );
+  }
+}
+
+ReactDOM.render(<Clock />, document.getElementById("root"));
+```
+
+#### 将生命周期方法添加到类中
+`组件在销毁时释放所占用的资源非常重要`
+
+当组件挂载后调用componentDidMount()方法，当组件卸载后调用componentWillUnMount()
+```js
+class Clock extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {date: new Date()};
+  }
+
+  componentDidMount() {
+    this.timerID = setInterval(
+      () => this.tick(),
+      1000
+    );
+
+    this.counter = 0;
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.timerID);
+  }
+
+  tick() {
+    this.setState({
+      date: new Date()
+    });
+  }
+  
+  render() {
+    return <div>
+      {console.log('调用render' + (this.counter += 1))}
+      <p>现在时间：{this.state.date.toLocaleTimeString()}</p>
+    </div>
+  }
+
+}
+
+ReactDOM.render(<Clock />, document.getElementById("root"));
+```
+
+#### 正确的使用状态
+
+`关于setState()有三个注意点`
+
+##### 不要直接更新状态，应该使用`setState()`
+```js
+// wrong
+this.state.comment = 'Hello';
+// correct
+this.state.setState({comment: 'Hello'});
+```
+构造函数是唯一能够初始化`this.state`的地方
+
+
+##### 状态更新可能是异步的
+`React的this.props和this.state可能是异步更新的，不能用于实时计算`
+```js
+// 可能无法更新计数器
+this.setState({
+  counter: this.state.counter + this.props.increment,
+});
+```
+应该让`setState()`来接收一个函数而不是对象。该函数将接收先前的状态作为第一个参数，将此次更新被应用时的props作为第二个参数：
+```js
+this.setState((prevState, props) => {
+  counter: prevState.counter + props.increment,
+});
+```
+##### 状态更新合并
+当调用`setState()`时，React将你提供的对象合并到当前的状态
+
+```js
+constructor(props) {
+  super(props);
+  this.state = {
+    user: [],
+    comment: []
+  };
+}
+
+// 可以调用setState()独立的更新他们
+componentDidMount() {
+  fetchPosts().then(response => {
+    this.setState({
+      user: response.user
+    })
+  });
+  fetchPosts().then(response => {
+    this.setState({
+      comment: response.comment
+    })
+  })
+}
+
+```
+这种方法称之为`浅合并`，也就是说`this.setState({comment})`完整的保留了`this.state.user`，只完全替换了`this.state.comment`
+
+#### 数据自顶向下流动
+
+
