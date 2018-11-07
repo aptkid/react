@@ -168,7 +168,7 @@ class Clock extends React.Component {
 ```js
 class Clock extends React.Component {
   render() {
-    return(
+    return()
       <div>
         <h1>Hello, React!</h1>
         <h2>It is {this.state.date.toLocalTimeString()}</h2>
@@ -179,7 +179,7 @@ class Clock extends React.Component {
 ```
 2、添加一个类构造函数来初始化状态`this.state`
 ```js
-class Olock extends React.Component {
+class Clock extends React.Component {
   constructor(props) {
     super(props);
     this.state = {date: new Date()};
@@ -322,6 +322,108 @@ componentDidMount() {
 ```
 这种方法称之为`浅合并`，也就是说`this.setState({comment})`完整的保留了`this.state.user`，只完全替换了`this.state.comment`
 
-#### 数据自顶向下流动
+#### 数据自顶向下（单项）流动
+React 组件之间是相互独立的，父组件可以将自身的状态`this.state.object`传给子组件`this.props.object`使用。任何状态始终是由特定的组件所有，并且从该组件导出的数据或UI只能影响下面的组件。可以想象组件树为属性的瀑布，每个组件的状态都作为一个额外的水源，可以连接在任意节点，但是都会流下来。在 React 应用程序中，组件是有状态还是无状态被认为是可能随时间而变化的组件的实现细节。 可以在有状态组件中使用无状态组件，反之亦然。
 
+
+## 事件处理
+`React 元素的事件处理和DOM元素的事件处理很类似，只是有一些语法上的不同：`
+
+- React事件绑定属性的名称采用驼峰式写法，而不是小写
+- 如果采用JSX的语法需要传入一个函数作为事件处理函数而不是一个字符串（DOM写法）
+
+传统的HTML：
+```html
+<button onclick="Login()">登录</button>
+```
+React：
+```html
+<button onClick={Login}>登录</button>
+```
+
+React中不能使用返回`false`的方式阻止默认行为。必须明确的使用`preventDefault` ，例如传统的HTML中阻止打开新页面：
+```html
+<a href="#" onclick="return false;">点我</a>
+```
+在React中应该这么写：
+```js
+function ActionLink() {
+  function handleClick(e) {
+    e.preventDefault();
+    console.log('已经点击过该链接');
+  }
+
+  return (
+    <a href="#" onClick={handleClick}>点我</a>
+  )
+}
+```
+
+`e` 是一个合成事件，不用担心浏览器兼容问题。
+
+在React中不需要使用`addEventListener`为已创建的DOM元素添加监听器。只需要在元素初始渲染的时候提供一个监听器
+
+
+事件处理器会成为类的一个方法：
+```js
+class Toggle extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {isToggleOn: true};
+
+    // 类默认不会绑定thiis, 需要手动绑定
+    this.handleClick = this.handleClick.bind(this);
+
+  }
+
+  handleClick() {
+    this.setState(prevState => ({
+      isToggleOn: !prevState.isToggleOn
+    }));
+  }
+
+  render() {
+    return(
+      <button onClick={this.handleClick}>
+        {this.state.isToggleOn ? '开': '关'}
+      </button>
+    )
+  }
+}
+
+ReactDOM.render(<Toggle />, document.getElementById("root"))
+```
+
+#### 向事件处理函数传递参数
+有时候需要向事件处理函数传递参数，例如删除当前选中的行：
+```html
+<button onClick={(e) => this.deleteRowP(id, e)}>删除该行</button>
+<button onClick={this.deleteRow.bind(this, id)}>删除该行</button>
+```
+
+## 条件渲染
+`在React中可以根据应用的状态只渲染组件的一部分，`
+```jsx
+function UserGreeting(props) {
+  return <h1>Welcome back</h1>
+}
+
+function GuestGreeting(props) {
+  return <h1>Please login</h1>
+}
+
+function Greeting(props) {
+
+  const isLoggedIn = props.isLoggedIn;
+  if(isLoggedIn) {
+    return <UserGreeting />
+  } else {
+    return <GuestGreeting />
+  }
+}
+
+ReactDOM.render(<Greeting isLoggedIn={true}/>, document.getElementById("root"));
+```
+#### 元素变量
+`可以使用变量来存储元素`
 
